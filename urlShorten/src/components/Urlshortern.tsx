@@ -29,12 +29,16 @@ const UrlFetcher: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null); 
   const showscroll = useRef(false)
   const BASE_URL = config.BASE_URL;
+  const API_KEY = config.API_KEY
 
   const fetchUrls = async (pageNum: number) => {
     setLoading(true);
     try {
       const response = await axios.get<UrlResponse>(`${BASE_URL}/urlall`, {
         params: { page: pageNum, limit: 5 },
+        headers: {
+          Authorization: API_KEY
+        },
       });
 
       if (response.data.status) {
@@ -74,9 +78,16 @@ const UrlFetcher: React.FC = () => {
     }
 
     try {
-      const response = await axios.post<{ shortUrl: string }>(`${BASE_URL}/url`, {
-        originalUrl: urlInput,
-      });
+      const response = await axios.post<{ shortUrl: string }>(
+        `${BASE_URL}/url`,
+        { originalUrl: urlInput }, 
+        {
+          headers: {
+            authorization: API_KEY, 
+            'Content-Type': 'application/json', 
+          },
+        }
+      );
       setShortenedUrl(response.data.shortUrl);
       setUrlInput("");
       setUrls([]); 
@@ -96,8 +107,18 @@ const UrlFetcher: React.FC = () => {
 
   const handleUrlClick = async (data: any) => {
     try {
-
-      await axios.put(`${BASE_URL}/url?shortCode=${data._id}`);
+      await axios.put(
+        `${BASE_URL}/url`, 
+        {}, 
+        {
+          params: { shortCode: data._id },
+          headers: {
+            Authorization: API_KEY,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
       setUrls([]); 
       fetchUrls(1); 
       window.open(data.original_url, "_blank");
